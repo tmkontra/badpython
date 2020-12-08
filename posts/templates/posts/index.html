@@ -1,0 +1,51 @@
+{% extends "posts/layout.html" %}
+{% block content %}
+
+<div class="row pt-2">
+    <h1>BadPython.com</h1>
+    <div class="ml-auto my-auto">
+        <button class="btn btn-primary float-right">Submit Your Own</button>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <div class="row d-flex justify-content-center">
+        <h3>{{ post.title }}</h3>
+    </div>
+    <div id="code-container" class="container" style="max-width: 80%; position: relative; padding: 0px;">
+        <button class='btn btn-outline-dark' id="suggestion" style="color: darkgray; border-color: dar;">
+            <i class="far fa-lightbulb"></i>
+            suggest...
+        </button>
+        <pre style="margin-bottom: 0.1rem;">
+            <code id="code" class="python px-5" style="line-height: 1.5rem; min-height: 10%; max-height: 50%; overflow-y: scroll;">
+    {{ post.code }}
+            </code>
+        </pre>
+        <div class="row" style="margin: auto;" class="mx-auto">
+            <button class="btn btn-success">
+                <i class="far fa-thumbs-up"></i>
+                This <em>is</em> bad python!
+            </button>
+            <button class="btn btn-danger ml-auto">
+                <i class="far fa-ban"></i>
+                This isn't that bad!
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    func = function () {
+        let c = $("#code");
+        let x = c.position();
+        let s = $("#suggestion");
+        console.log(s);
+        s.css({ top: x.top, right: x.left, position: 'absolute' });
+    }
+    $(window).on('resize', func);
+    $(document).ready(function() {func(); func()});
+    $("#code-container").bind("reposition", func);
+</script>
+
+{% endblock %}
