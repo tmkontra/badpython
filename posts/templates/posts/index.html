@@ -19,15 +19,15 @@
         </button>
         <pre style="margin-bottom: 0.1rem;">
             <code id="code" class="python px-5" style="line-height: 1.5rem; min-height: 10%; max-height: 50%; overflow-y: scroll;">
-    {{ post.code }}
+{{ post.code }}
             </code>
         </pre>
         <div class="row" style="margin: auto;" class="mx-auto">
-            <button class="btn btn-success">
+            <button id="bad-btn" class="btn btn-success">
                 <i class="far fa-thumbs-up"></i>
                 This <em>is</em> bad python!
             </button>
-            <button class="btn btn-danger ml-auto">
+            <button id="not-bad-btn" class="btn btn-danger ml-auto">
                 <i class="far fa-ban"></i>
                 This isn't that bad!
             </button>
@@ -36,16 +36,37 @@
 </div>
 
 <script>
-    func = function () {
+    set_suggest_button_position = function () {
         let c = $("#code");
         let x = c.position();
         let s = $("#suggestion");
-        console.log(s);
         s.css({ top: x.top, right: x.left, position: 'absolute' });
-    }
-    $(window).on('resize', func);
-    $(document).ready(function() {func(); func()});
-    $("#code-container").bind("reposition", func);
+    };
+    $(window).on('resize', set_suggest_button_position);
+    $(document).ready(function() { set_suggest_button_position(); set_suggest_button_position()});
+    $("#code-container").bind("reposition", set_suggest_button_position);
+
+    var post_url = '{% url "vote" post.id %}'
+    
+    let vote_for_post = function (is_bad) {
+        console.log(`currying ${is_bad}`);
+        let vote = function (ev) {
+            fetch(post_url, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({
+                    isBad: is_bad,
+                })
+            }).then(response => console.log(`VOTE OK! ${is_bad}`))
+        };
+        return vote;
+    };
+
+    $("#bad-btn").click(vote_for_post(true));
+    $("#not-bad-btn").click(vote_for_post(false));
 </script>
 
 {% endblock %}

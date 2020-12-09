@@ -22,6 +22,9 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script>
         <title>{% block title %}BadPython.com{% endblock %}</title>
+        <script>
+            var csrftoken = '{{ csrf_token }}';
+        </script>
     </head>
     <body>
         <div class="container pt-1">
