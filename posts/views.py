@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import render
 from django.views import View
 
@@ -51,8 +51,11 @@ class VoteView(View):
             return HttpResponseForbidden("must provide ip address to vote")
         vote_field = VoteField.from_is_bad(is_bad)
         vote = Vote.new(ip_addr=ip_addr, post_id=post_id, is_bad=vote_field)
-        vote.save()
-        return HttpResponse()
+        if vote is None:
+            return HttpResponse(status=202)
+        else:
+            vote.save()
+            return JsonResponse({"vote": {"id": vote.id}})
 
 
         

@@ -35,6 +35,40 @@
     </div>
 </div>
 
+<div id="modal-body-success" style="display: none;">
+    <button class="btn btn-outline-dark">
+        <i class="far fa-lightbulb"></i>
+        Share How You'd Fix It
+    </button>
+    <button class="btn btn-primary">
+        <i class="fa fa-forward"></i>
+        See Another
+    </button>
+</div>
+
+<div id="modal-body-failed" style="display: none;">
+    <button class="btn btn-outline-dark">
+        <i class="fa fa-search"></i>
+        See Another
+    </button>
+</div>
+
+<div class="modal" role="dialog" id="after-vote-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="vote-modal-title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body d-flex justify-content-around" id="vote-modal-body">
+        
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     set_suggest_button_position = function () {
         let c = $("#code");
@@ -47,6 +81,37 @@
     $("#code-container").bind("reposition", set_suggest_button_position);
 
     var post_url = '{% url "vote" post.id %}'
+
+    let modal = $("#after-vote-modal");
+    let modalTitle = $("#vote-modal-title");
+
+    let body = $("#vote-modal-body");
+
+    let vote_success = function () {
+        let s = $("#modal-body-success");
+        console.log(s);
+        let h = s.html();
+        console.log(h);
+        body.html(h);
+        modalTitle.text("Thanks for voting!");
+        modal.modal("show");
+    };
+
+    let vote_failed = function () {
+        let h = $("#modal-body-failed").html();
+        body.html(h);
+        modal.modal("show");
+    };
+
+    let vote_respose_handler = function (response) {
+        if (response.status == 200) {
+            vote_success()
+        } else if (response.status == 202) {
+            vote_success()
+        } else {
+            vote_failed()
+        }
+    };
     
     let vote_for_post = function (is_bad) {
         console.log(`currying ${is_bad}`);
@@ -60,7 +125,7 @@
                 body: JSON.stringify({
                     isBad: is_bad,
                 })
-            }).then(response => console.log(`VOTE OK! ${is_bad}`))
+            }).then(vote_respose_handler)
         };
         return vote;
     };

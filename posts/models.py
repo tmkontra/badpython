@@ -33,9 +33,9 @@ class Client(models.Model):
 
     @classmethod 
     def get_or_create(cls, ip_addr: str):
-        c = Client.objects.get(ip_address=cls.aton(ip_addr))
-        if c is None:
-            return Client.from_ip(ip_addr).save()
+        client, created = Client.objects.get_or_create(ip_address=cls.aton(ip_addr))
+        return client
+
 
 class VoteField(models.BooleanField):
     description = "A Vote, good or bad."
@@ -62,10 +62,17 @@ class Vote(models.Model):
     is_bad = VoteField(null=False, db_index=True)
 
     @classmethod
+    def already_voted(cls, client_id, post_id):
+        existing = Vote.objects.filter(client__id=client_id, post__id=post_id)
+        return len(existing) > 0
+
+    @classmethod
     def new(cls, ip_addr: str, post_id: int, is_bad: bool) -> 'Vote':
         client = Client.get_or_create(ip_addr)
-        post = Post.get(pk=post_id)
+        post = Post.objects.get(pk=post_id)
         if post is None:
+            return None
+        if cls.already_voted(client.id, post_id):
             return None
         return Vote(client=client, post=post, is_bad=is_bad)
 
