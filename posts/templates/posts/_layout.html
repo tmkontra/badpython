@@ -5,6 +5,7 @@
         {% bootstrap_messages %}
 
         <link rel="stylesheet" type="text/css" href="{% static 'posts/bootstrap-litera.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'posts/badpython.css' %}">
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
             integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
             crossorigin="anonymous"></script>
@@ -25,11 +26,32 @@
         <script>
             var csrftoken = '{{ csrf_token }}';
         </script>
+
+        {% block extra_head %}
+        {% endblock %}
     </head>
     <body>
         <div class="container pt-1">
+            <div class="row pt-2">
+                <h1>
+                    <a href="{% url 'index' %}" class="link-unstyled">
+                        BadPython.com
+                    </a>
+                </h1>
+                {% if not submission %}
+                <div class="ml-auto my-auto">
+                    <a href="{% url 'submit' %}" class="btn btn-primary float-right">
+                        <i class="far fa-plus-circle"></i>
+                        Submit Bad Python
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="container mt-5">
             {% block content %}
             {% endblock %}
+            </div>
         </div>
     </body>
 </html>

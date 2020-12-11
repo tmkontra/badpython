@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+from django.shortcuts import redirect, render
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse, HttpResponseNotFound
 from django.shortcuts import render
 from django.views import View
 
@@ -8,20 +8,33 @@ import json
 from .models import *
 
 # Create your views here.
-def index(request):
-    post = _random_post()
-    context = {
-        "post": post
-    }
-    return render(request, "posts/index.html", context)
+class Index(View):
+    def get(self, request, **kwargs):
+        previous_id = request.GET.get("p")
+        post = _random_post(previous_id=previous_id)
+        context = {
+            "post": post
+        }
+        return render(request, "posts/index.html", context)
 
-def _random_post():
+index = Index.as_view()
+
+def _random_post(previous_id=None):
+    post = None
+    if previous_id:
+        post_search = Post.objects.filter(pk=previous_id)
+        if len(post_search) > 0:
+            post = post_search[0]
+    where = ""
+    if post is not None:
+        where = f"WHERE id != {post.id}"
     return Post.objects.raw(
-        """
+        f"""
         SELECT * 
-        FROM posts_post 
+        FROM posts_post
+        {where}
         LIMIT 1 
-        OFFSET abs(random() % (select count(*) from posts_post ));
+        OFFSET abs(random() % (select count(*) from posts_post {where}));
         """
     )[0]
 
@@ -35,6 +48,28 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+
+class SubmissionView(View):
+    def get(self, request):
+        context = { "submission": True }
+        return render(request, "posts/submit.html", context)
+
+    def post(self, request, **kwargs):
+        try:
+            body = json.loads(request.body)
+        except:
+            return HttpResponseBadRequest("could not parse body!")
+        title, code = body.get("title"), body.get("code")
+        if title is None or code is None:
+            return HttpResponseBadRequest("must submit code and title!")
+        ip_addr = get_client_ip(request)    
+        post = Post.new(title, code, ip_addr)
+        if post is None:
+            return HttpResponseBadRequest("Unable to save your submission!")
+        else:
+            post.save()
+            return redirect("index")
 
 
 class VoteView(View):

@@ -1,37 +1,27 @@
-{% extends "posts/layout.html" %}
+{% extends "posts/_layout.html" %}
 {% block content %}
-
-<div class="row pt-2">
-    <h1>BadPython.com</h1>
-    <div class="ml-auto my-auto">
-        <button class="btn btn-primary float-right">Submit Your Own</button>
-    </div>
+<div class="row d-flex justify-content-center">
+    <h3>{{ post.title }}</h3>
 </div>
-
-<div class="container mt-5">
-    <div class="row d-flex justify-content-center">
-        <h3>{{ post.title }}</h3>
-    </div>
-    <div id="code-container" class="container" style="max-width: 80%; position: relative; padding: 0px;">
-        <button class='btn btn-outline-dark' id="suggestion" style="color: darkgray; border-color: dar;">
-            <i class="far fa-lightbulb"></i>
-            suggest...
-        </button>
-        <pre style="margin-bottom: 0.1rem;">
-            <code id="code" class="python px-5" style="line-height: 1.5rem; min-height: 10%; max-height: 50%; overflow-y: scroll;">
+<div id="code-container" class="container" style="max-width: 80%; position: relative; padding: 0px;">
+    <button class='btn btn-outline-dark' id="suggestion" style="color: darkgray; border-color: dar;">
+        <i class="far fa-lightbulb"></i>
+        suggest...
+    </button>
+    <pre style="margin-bottom: 0.1rem;">
+        <code id="code" class="python px-5" style="line-height: 1.5rem; min-height: 10%; max-height: 50%; overflow-y: scroll;">
 {{ post.code }}
-            </code>
-        </pre>
-        <div class="row" style="margin: auto;" class="mx-auto">
-            <button id="bad-btn" class="btn btn-success">
-                <i class="far fa-thumbs-up"></i>
-                This <em>is</em> bad python!
-            </button>
-            <button id="not-bad-btn" class="btn btn-danger ml-auto">
-                <i class="far fa-ban"></i>
-                This isn't that bad!
-            </button>
-        </div>
+        </code>
+    </pre>
+    <div class="row" style="margin: auto;" class="mx-auto">
+        <button id="bad-btn" class="btn btn-success">
+            <i class="far fa-thumbs-up"></i>
+            This <em>is</em> bad python!
+        </button>
+        <button id="not-bad-btn" class="btn btn-danger ml-auto">
+            <i class="far fa-ban"></i>
+            This isn't that bad!
+        </button>
     </div>
 </div>
 
@@ -40,24 +30,24 @@
         <i class="far fa-lightbulb"></i>
         Share How You'd Fix It
     </button>
-    <button class="btn btn-primary">
+    <a href="{% url 'index' %}?p={{post.id}}" class="btn btn-primary">
         <i class="fa fa-forward"></i>
         See Another
-    </button>
+    </a>
 </div>
 
 <div id="modal-body-failed" style="display: none;">
-    <button class="btn btn-outline-dark">
-        <i class="fa fa-search"></i>
+    <a href="{% url 'index' %}?p={{post.id}}" class="btn btn-primary">
+        <i class="fa fa-forward"></i>
         See Another
-    </button>
+    </a>
 </div>
 
 <div class="modal" role="dialog" id="after-vote-modal">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="vote-modal-title"></h5>
+                <h5 class="modal-title" id="vote-modal-title">Thanks for voting!</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -89,11 +79,8 @@
 
     let vote_success = function () {
         let s = $("#modal-body-success");
-        console.log(s);
         let h = s.html();
-        console.log(h);
         body.html(h);
-        modalTitle.text("Thanks for voting!");
         modal.modal("show");
     };
 
@@ -114,6 +101,12 @@
     };
     
     let vote_for_post = function (is_bad) {
+        let handler;
+        if (is_bad) {
+            handler = vote_success;
+        } else {
+            handler = vote_failed;
+        };
         console.log(`currying ${is_bad}`);
         let vote = function (ev) {
             fetch(post_url, {
@@ -125,7 +118,7 @@
                 body: JSON.stringify({
                     isBad: is_bad,
                 })
-            }).then(vote_respose_handler)
+            }).then(handler)
         };
         return vote;
     };

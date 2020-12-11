@@ -1,18 +1,17 @@
+import datetime
 import socket
 from django.db import models
+from django import utils
 
 
 class PublishableMixin(models.Model):
-    pub_date = models.DateTimeField('date published')
+    pub_date = models.DateTimeField(
+        'date published', 
+        default=utils.timezone.now
+    )
 
     class Meta:
         abstract = True
-
-
-class Post(PublishableMixin, models.Model):
-    title = models.CharField(max_length=128, null=False)
-    code = models.TextField(null=False)
-    note = models.TextField()
 
 
 class Client(models.Model):
@@ -35,6 +34,21 @@ class Client(models.Model):
     def get_or_create(cls, ip_addr: str):
         client, created = Client.objects.get_or_create(ip_address=cls.aton(ip_addr))
         return client
+
+
+class Post(PublishableMixin, models.Model):
+    title = models.CharField(max_length=128, null=False)
+    code = models.TextField(null=False)
+    client = models.ForeignKey(Client, null=True, on_delete=models.PROTECT)
+    note = models.TextField(null=True)
+
+    @classmethod
+    def new(cls, title, code, client_ip=None):
+        if client_ip is not None:
+            client = Client.get_or_create(client_ip)
+        else:
+            client = None
+        return Post(title=title, code=code, client=client, note=None)
 
 
 class VoteField(models.BooleanField):

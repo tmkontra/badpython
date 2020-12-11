@@ -1,0 +1,90 @@
+{% extends "posts/_layout.html" %}
+{% load static %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js"
+    integrity="sha512-GoORoNnxst42zE3rYPj4bNBm0Q6ZRXKNH2D9nEmNvVF/z24ywVnijAWVi/09iBiVDQVf3UlZHpzhAJIdd9BXqw=="
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-python.min.js"
+    integrity="sha512-2Ke4vMGrMfYRM55pT1aA5bw7Pl82Sc7K5Hg8XZYZu+EQrb0AO1mNYTagwZm+MFVAImYS9Mlnm73zcgc01wPXxA=="
+    crossorigin="anonymous"></script>
+<style type="text/css" media="screen">
+    #code-editor {
+        width: 100%;
+        min-height: 200px;
+        height: 40vh;
+        max-width: 764px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: dimgrey;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center">
+    <div class="col-8">
+        <form class="form" id="submission-form">
+            <div class="row">
+                <input id="submission-title" class="form-control" type="text" placeholder="Submission Title" required/>
+            </div>
+            <div class="row mt-2">
+                <div id="code-editor"></div>
+            </div>
+            <div class="row mt-5">
+                <button type="submit" class="btn btn-primary ml-auto">
+                    Submit
+                </button>
+            </div>  
+        </form>
+    </div>
+</div>
+
+<script>
+    const theme = "ace/theme/sqlserver"
+    const themeUrl = "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-sqlserver.min.js"
+    var editor = ace.edit("code-editor");
+    ace.config.setModuleUrl(theme, themeUrl);
+    editor.setTheme(theme);
+    editor.session.setMode("ace/mode/python");
+
+    let submitUrl = "{% url 'submit' %}";
+
+    let form = $("#submission-form");
+
+    const responseHandler = function (response) {
+        if (response.status == 301) {
+            return response.json().redirectUrl
+        } else {
+            return null
+        }
+    }
+
+    const onSubmit = function (ev) {
+        ev.preventDefault();
+        let code = editor.getValue();
+        let title = $("#submission-title").val();
+        let data = {
+            title: title,
+            code: code
+        };
+        fetch(submitUrl, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify(data)
+        }
+        ).then(response => {
+            if (response.redirected) {
+                window.location.replace(response.url);
+            } else {
+                alert("There was an error processing your submission, please try again later!");
+            }
+        })
+    };
+    form.submit(onSubmit)
+</script>
+
+{% endblock %}
