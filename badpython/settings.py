@@ -35,7 +35,7 @@ if ENVIRONMENT == "dev":
 else:
     DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(" ")
 
 
 # Application definition
@@ -99,6 +99,22 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "badpython.wsgi.application"
+
+LOG_LEVEL = "DEBUG"
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': LOG_LEVEL,
+    },
+}
 
 
 # Database
