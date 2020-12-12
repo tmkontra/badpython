@@ -1,1 +1,1 @@
-rsync . badpython:~/badpython --exclude-from=.rsync-excludes
+/usr/local/bin/rsync -r . badpython:~/badpython --exclude-from=.rsync-exclude

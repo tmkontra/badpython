@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import logging
+from logging import config as logconfig
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -35,7 +37,7 @@ if ENVIRONMENT == "dev":
 else:
     DEBUG = False
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(" ")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 
 
 # Application definition
@@ -100,21 +102,35 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "badpython.wsgi.application"
 
-LOG_LEVEL = "DEBUG"
+# Clear prev config
+LOGGING_CONFIG = None
 
-LOGGING = {
+# Get loglevel from env
+LOGLEVEL = os.getenv('DJANGO_LOGLEVEL', 'WARN').upper()
+
+LOGFMT = '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(message)s'
+
+logconfig.dictConfig({
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': LOGFMT,
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'console',
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': LOG_LEVEL,
+    'loggers': {
+        '': {
+            'level': LOGLEVEL,
+            'handlers': ['console', ],
+        },
     },
-}
+})
 
 
 # Database

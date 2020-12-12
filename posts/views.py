@@ -1,6 +1,7 @@
 import ast
 from functools import partial
 import json
+import logging
 
 from django.contrib import messages
 from django.http import (
@@ -19,8 +20,11 @@ from .exceptions import DuplicateError
 from .models import *
 from django.core.cache.backends import locmem
 
+logger = logging.getLogger("posts.views")
+
 
 def ratelimited(request, *args, **kwargs):
+    logger.info("Rate limit reached for request", request.META['CLIENT_IP'])
     return HttpResponse(status=429, content="Too many requests, please slow down!")
 
 
@@ -40,6 +44,7 @@ class Index(View):
         previous_id = request.GET.get("p")
         post = self._random_post(previous_id=previous_id)
         if post is None:
+            logger.debug("Exhausted all posts")
             messages.error(request, "No more posts to view, submit your own!")
             return redirect("submit")
         context = {"post": post}
@@ -55,7 +60,7 @@ class Index(View):
         where = ""
         if post is not None:
             where = f"WHERE id != {post.id}"
-        print("where", where)
+            logger.debug("filtering previous post: %s", where)
         try:
             sql = f"""
                 SELECT * 
@@ -64,10 +69,9 @@ class Index(View):
                 LIMIT 1 
                 OFFSET floor(random() * (select count(*) from posts_post {where}));
                 """
-            print(sql)
             return Post.objects.raw(sql)[0]
         except Exception as e:
-            print("could not get random", e)
+            logger.exception("could not get random post")
             return None
 
 
