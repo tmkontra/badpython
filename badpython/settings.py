@@ -10,7 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'y)#gcrotv@t60l-295qxygsv(2glfz9mi4%i8ly$ff21-*c@@c'
+SECRET_KEY = os.environ["BADPYTHON_SECRET_KEY"]
+
+ENVIRONMENT = os.environ['BADPYTHON_ENV']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if ENVIRONMENT == "dev":
+    DEBUG = True
+else:
+    DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -51,10 +61,26 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'posts.middleware.get_client_ip',
+    'ratelimit.middleware.RatelimitMiddleware',
 ]
+
 
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+
+RATELIMIT_ENABLE = True
+RATELIMIT_VIEW = "posts.views.ratelimited"
+RATELIMIT_USE_CACHE = "default"
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
 
 ROOT_URLCONF = 'badpython.urls'
 
@@ -80,11 +106,24 @@ WSGI_APPLICATION = 'badpython.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+db_user = os.environ['DB_USER']
+db_pass = os.environ['DB_PASS']
+db_name = os.environ['DB_NAME']
+db_host = os.environ['DB_HOST']
+db_port = os.environ['DB_PORT']
+
+db = {
+    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    'NAME': db_name,
+    'USER': db_user,
+    'PASSWORD': db_pass,
+    'HOST': db_host,
+    'PORT': db_port,
+
+}
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': db
 }
 
 

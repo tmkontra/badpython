@@ -1,0 +1,10 @@
+version: '3.6'
+services:
+  psql:
+    image: "postgres:12"
+    environment: 
+      - POSTGRES_USER=badpython
+      - POSTGRES_PASSWORD=badpython
+      - POSTGRES_DB=badpython
+    ports:
+      - "54320:5432"

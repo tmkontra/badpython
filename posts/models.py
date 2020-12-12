@@ -89,7 +89,7 @@ class Vote(models.Model):
         if post is None:
             return None
         if cls.already_voted(client.id, post_id):
-            return DuplicateError("You have already voted for this.")
+            raise DuplicateError("You have already voted for this.")
         return Vote(client=client, post=post, is_bad=is_bad)
 
 

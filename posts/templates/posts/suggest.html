@@ -33,15 +33,21 @@
 {% block content %}
 <div class="container d-flex justify-content-between">
     <div class="col-6" id="code-submission-col">
+        <div>
+            <h3>{{post.title}}</h3.>
+        </div>
         <div class="submission-suggestion-view" id="code-submission">
         </div>
     </div>
     <div class="col-6" id="suggestion-editor-col">
+        <div>
+            <h3>Your Suggestion</h3.>
+        </div>
         <form class="form" id="suggestion-form">
-            <div class="row">
+            <div>
                 <div id="code-editor"></div>
             </div>
-            <div class="row mt-2">
+            <div class="mt-2">
                 <input class="form-control" type="text" id="summary-input" placeholder="Summarize your fix" required/>
             </div>
             <div class="row mt-2">
@@ -82,6 +88,8 @@
 
     let submissionCode = `{{post.code|safe}}`;
     submission.setValue(submissionCode);
+    submission.clearSelection();
+    submission.moveCursorTo(0, 0);
 
     var editor = ace.edit("code-editor");    
     editor.setTheme(theme);
