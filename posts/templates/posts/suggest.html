@@ -9,6 +9,15 @@
     integrity="sha512-2Ke4vMGrMfYRM55pT1aA5bw7Pl82Sc7K5Hg8XZYZu+EQrb0AO1mNYTagwZm+MFVAImYS9Mlnm73zcgc01wPXxA=="
     crossorigin="anonymous"></script>
 <style type="text/css" media="screen">
+    #code-submission {
+        width: 100%;
+        min-height: 200px;
+        height: 40vh;
+        max-width: 764px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: dimgrey;
+    }
     #code-editor {
         width: 100%;
         min-height: 200px;
@@ -22,20 +31,24 @@
 {% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center">
-    <div class="col-8">
-        <form class="form" id="submission-form">
+<div class="container d-flex justify-content-between">
+    <div class="col-6" id="code-submission-col">
+        <div class="submission-suggestion-view" id="code-submission">
+        </div>
+    </div>
+    <div class="col-6" id="suggestion-editor-col">
+        <form class="form" id="suggestion-form">
             <div class="row">
-                <input id="submission-title" class="form-control" type="text" placeholder="Submission Title" required/>
-            </div>
-            <div class="row mt-2">
                 <div id="code-editor"></div>
             </div>
-            <div class="row mt-5">
+            <div class="row mt-2">
+                <input class="form-control" type="text" id="summary-input" placeholder="Summarize your fix" required/>
+            </div>
+            <div class="row mt-2">
                 <button type="submit" class="btn btn-primary ml-auto">
-                    Submit
+                    Submit Suggestion
                 </button>
-            </div>  
+            </div>
         </form>
     </div>
 </div>
@@ -59,21 +72,43 @@
 <script>
     const theme = "ace/theme/sqlserver"
     const themeUrl = "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-sqlserver.min.js"
-    var editor = ace.edit("code-editor");
+    
     ace.config.setModuleUrl(theme, themeUrl);
+
+    var submission = ace.edit("code-submission");
+    submission.setTheme(theme);
+    submission.session.setMode("ace/mode/python");
+    submission.setReadOnly(true);
+
+    let submissionCode = `{{post.code|safe}}`;
+    submission.setValue(submissionCode);
+
+    var editor = ace.edit("code-editor");    
     editor.setTheme(theme);
     editor.session.setMode("ace/mode/python");
 
-    let submitUrl = "{% url 'submit' %}";
+    let submitUrl = "{% url 'suggest' post_id=post.id %}";
 
-    let form = $("#submission-form");
+    let form = $("#suggestion-form");
+
+    const responseHandler = function (response) {
+        if (response.status == 301) {
+            return response.json().redirectUrl
+        } else {
+            return null
+        }
+    }
+
+    const invalidCodeHandler = function () {
+
+    }
 
     const onSubmit = function (ev) {
         ev.preventDefault();
         let code = editor.getValue();
-        let title = $("#submission-title").val();
+        let summary = $("#summary-input").val();
         let data = {
-            title: title,
+            summary: summary,
             code: code
         };
         fetch(submitUrl, {
@@ -89,7 +124,7 @@
                 window.location.replace(response.url);
             } else if (response.status == 200) {
                 response.json().then(json => {
-                    let msg = json.message;                
+                    let msg = json.message;
                     $("#invalid-submission-body").text(msg);
                     $("#invalid-submission-modal").modal("show");
                 });

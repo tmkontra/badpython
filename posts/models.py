@@ -3,11 +3,13 @@ import socket
 from django.db import models
 from django import utils
 
+from .exceptions import DuplicateError
+
 
 class PublishableMixin(models.Model):
     pub_date = models.DateTimeField(
         'date published', 
-        default=utils.timezone.now
+        auto_now_add=True
     )
 
     class Meta:
@@ -87,10 +89,25 @@ class Vote(models.Model):
         if post is None:
             return None
         if cls.already_voted(client.id, post_id):
-            return None
+            return DuplicateError("You have already voted for this.")
         return Vote(client=client, post=post, is_bad=is_bad)
 
 
 class Suggestion(PublishableMixin, models.Model):
-    code = models.TextField()
+    post = models.ForeignKey(Post, null=False, on_delete=models.PROTECT)
+    code = models.TextField(null=False)
     description = models.TextField()
+    client = models.ForeignKey(Client, null=False, on_delete=models.PROTECT)
+
+    @classmethod
+    def already_suggested(cls, client_id, post_id):
+        existing = cls.objects.filter(client__id=client_id, post__id=post_id)
+        return len(existing) > 0
+
+    @classmethod
+    def new(cls, post_id: int, code: bytes, summary: str, ip_addr: str):
+        client = Client.get_or_create(ip_addr)
+        post = Post.objects.get(pk=post_id)
+        if cls.already_suggested(client.id, post.id):
+            raise DuplicateError("You have already submitted a suggestion for this.")
+        return Suggestion(post=post, client=client, code=code, description=summary)

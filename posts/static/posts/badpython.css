@@ -19,3 +19,7 @@
   padding: inherit;
   vertical-align: inherit;
 }
+
+p {
+  font-family: sans-serif;
+}
