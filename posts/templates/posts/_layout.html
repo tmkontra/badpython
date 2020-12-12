@@ -40,7 +40,7 @@
                     </a>
                 </h1>
                 {% submitting as is_submission %}
-                {% if is_submission %}
+                {% if not is_submission %}
                 <div class="ml-auto my-auto">
                     <a href="{% url 'submit' %}" class="btn btn-primary float-right">
                         <i class="far fa-plus-circle"></i>
