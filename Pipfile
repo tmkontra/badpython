@@ -4,6 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+black = "*"
+rope = "*"
 
 [packages]
 django = "*"
@@ -11,6 +13,10 @@ django-bootstrap4 = "*"
 django-ratelimit = "*"
 python-dotenv = "*"
 psycopg2 = "*"
+autopep8 = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true

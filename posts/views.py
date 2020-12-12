@@ -3,7 +3,13 @@ from functools import partial
 import json
 
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse, HttpResponseNotFound
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    JsonResponse,
+    HttpResponseNotFound,
+)
 from django.shortcuts import redirect, render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -19,8 +25,14 @@ def ratelimited(request, *args, **kwargs):
 
 
 GLOBAL_REQUEST_GROUP = "global"
-limit = ratelimit(key="header:client-ip", method="GET",
-                  rate="5/s", block=True, group=GLOBAL_REQUEST_GROUP)
+limit = ratelimit(
+    key="header:client-ip",
+    method="GET",
+    rate="5/s",
+    block=True,
+    group=GLOBAL_REQUEST_GROUP,
+)
+
 
 class Index(View):
     @method_decorator(limit)
@@ -30,9 +42,7 @@ class Index(View):
         if post is None:
             messages.error(request, "No more posts to view, submit your own!")
             return redirect("submit")
-        context = {
-            "post": post
-        }
+        context = {"post": post}
         return render(request, "posts/index.html", context)
 
     @classmethod
@@ -60,15 +70,15 @@ class Index(View):
             print("could not get random", e)
             return None
 
+
 index = Index.as_view()
 
 
 class SubmissionView(View):
     @method_decorator(limit)
     def get(self, request):
-        context = { "submission": True }
+        context = {"submission": True}
         return render(request, "posts/submit.html", context)
-
 
     @method_decorator(limit)
     def post(self, request, **kwargs):
@@ -81,7 +91,7 @@ class SubmissionView(View):
             return HttpResponseBadRequest("must submit code and title!")
         err, msg = parse_errors(code)
         if err:
-            return JsonResponse({ "message": msg, "errors": err })
+            return JsonResponse({"message": msg, "errors": err})
         ip_addr = request.META.get("CLIENT_IP")
         if ip_addr is None:
             messages.warning(request, "Unable to submit at this time.")
@@ -93,6 +103,7 @@ class SubmissionView(View):
             post.save()
             messages.success(request, "Submitted successfully!")
             return redirect("index")
+
 
 def parse_errors(code):
     if not (code and code.strip()):
@@ -108,6 +119,7 @@ def parse_errors(code):
         ], "Code must be valid python. Please try again."
     return None, None
 
+
 class SuggestionView(View):
     @method_decorator(limit)
     def get(self, request, post_id, **kwargs):
@@ -119,11 +131,13 @@ class SuggestionView(View):
             return redirect("index")
         client = Client.get_or_create(ip_addr)
         if Suggestion.already_suggested(client.id, post_id):
-            messages.warning(request, "You have already submitted a suggestion for that")
+            messages.warning(
+                request, "You have already submitted a suggestion for that"
+            )
             return redirect("index")
-        context = { "post": post }
+        context = {"post": post}
         return render(request, "posts/suggest.html", context)
-    
+
     @method_decorator(limit)
     def post(self, request, post_id, **kwargs):
         post = get_object_or_404(Post, pk=post_id)
@@ -171,9 +185,3 @@ class VoteView(View):
         else:
             vote.save()
             return JsonResponse({"vote": {"id": vote.id}})
-
-
-        
-
-
-

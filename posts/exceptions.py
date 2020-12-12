@@ -1,3 +1,2 @@
-
 class DuplicateError(Exception):
     pass
