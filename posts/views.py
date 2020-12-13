@@ -88,10 +88,12 @@ class SubmissionView(View):
     def post(self, request, **kwargs):
         try:
             body = json.loads(request.body)
-        except:
+        except Exception as e:
+            logger.exception("Got invalid submission body")
             return HttpResponseBadRequest("could not parse body!")
         title, code = body.get("title"), body.get("code")
         if title is None or code is None:
+            logger.error("Submission missing title [%s] or code [%s]", title, code)
             return HttpResponseBadRequest("must submit code and title!")
         err, msg = parse_errors(code)
         if err:
@@ -115,6 +117,7 @@ def parse_errors(code):
     try:
         ast.parse(code)
     except SyntaxError as e:
+        logger.exception("Could not parse invalid python: %s", code)
         return [
             {
                 "lineNum": e.lineno,

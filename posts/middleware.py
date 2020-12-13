@@ -1,3 +1,5 @@
+
+
 def get_client_ip(get_response):
     def process_request(request):
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
