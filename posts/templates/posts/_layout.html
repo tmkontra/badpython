@@ -5,6 +5,7 @@
         {% load bootstrap4 %}
         {% bootstrap_messages %}
 
+        <link rel="icon" href="{% static 'posts/img/favicon.ico' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'posts/bootstrap-litera.min.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'posts/badpython.css' %}">
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -19,10 +20,6 @@
 
         <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
             integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
-
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/styles/atom-one-light.min.css">
-        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/highlight.min.js"></script>
-        <script>hljs.initHighlightingOnLoad();</script>
         <title>{% block title %}BadPython.com{% endblock %}</title>
         <script>
             var csrftoken = '{{ csrf_token }}';

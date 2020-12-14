@@ -141,7 +141,6 @@
         } else {
             handler = vote_failed;
         };
-        console.log(`currying ${is_bad}`);
         let vote = function (ev) {
             fetch(post_url, {
                 method: "POST",
