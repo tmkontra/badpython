@@ -103,35 +103,39 @@ WSGI_APPLICATION = "badpython.wsgi.application"
 LOGGING_CONFIG = None
 
 # Get loglevel from env
-LOGLEVEL = os.getenv('DJANGO_LOGLEVEL', 'WARN').upper()
+LOGLEVEL = os.getenv("DJANGO_LOGLEVEL", "WARN").upper()
 
-LOGFMT = '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(message)s'
+LOGFMT = "%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(message)s"
 
-logconfig.dictConfig({
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'console': {
-            'format': LOGFMT,
+logconfig.dictConfig(
+    {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "console": {
+                "format": LOGFMT,
+            },
         },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "console",
+            },
         },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',
-    },
-    'loggers': {
-        'posts': {
-            'level': LOGLEVEL,
-            'handlers': ['console', ],
+        "root": {
+            "handlers": ["console"],
+            "level": "WARNING",
         },
-    },
-})
+        "loggers": {
+            "posts": {
+                "level": LOGLEVEL,
+                "handlers": [
+                    "console",
+                ],
+            },
+        },
+    }
+)
 
 
 # Database

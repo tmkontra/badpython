@@ -12,6 +12,7 @@ class PostAdmin(admin.ModelAdmin):
 class VoteAdmin(admin.ModelAdmin):
     pass
 
+
 @admin.register(Suggestion)
 class SuggestionAdmin(admin.ModelAdmin):
     pass

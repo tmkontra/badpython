@@ -23,9 +23,11 @@ from django.core.cache.backends import locmem
 
 logger = logging.getLogger("posts.views")
 
+
 def ratelimited(request, *args, **kwargs):
-    logger.info("Rate limit reached for request", request.META['CLIENT_IP'])
+    logger.info("Rate limit reached for request", request.META["CLIENT_IP"])
     return HttpResponse(status=429, content="Too many requests, please slow down!")
+
 
 GLOBAL_REQUEST_GROUP = "global"
 
@@ -71,10 +73,10 @@ class Index(View):
         return context
 
     def _update_seen(self, request, post):
-        seen = request.session.setdefault('posts_seen', list())
+        seen = request.session.setdefault("posts_seen", list())
         if post.id not in seen:
             seen.append(post.id)
-        request.session['posts_seen'] = seen
+        request.session["posts_seen"] = seen
         request.session.modified = True
 
     @classmethod
@@ -135,9 +137,9 @@ class SubmissionView(View):
             return redirect("index")
 
     def _update_session(self, request, post):
-        posts = request.session.setdefault('posts', list())
+        posts = request.session.setdefault("posts", list())
         posts.append(post.id)
-        request.session['posts'] = posts
+        request.session["posts"] = posts
         request.session.modified = True
         logger.debug("Session: %s", request.session)
 
@@ -191,12 +193,12 @@ class SuggestionView(View):
         suggestion.save()
         self._update_session(request, post, suggestion)
         return redirect("index")
-    
+
     def _update_session(self, request, post, suggestion):
-        suggestions = request.session.setdefault('suggestions', dict())
+        suggestions = request.session.setdefault("suggestions", dict())
         if post.id not in suggestions:
             suggestions[post.id] = suggestion.id
-        request.session['suggestions'] = suggestions
+        request.session["suggestions"] = suggestions
         request.session.modified = True
         logger.debug("Session: %s", request.session)
 
@@ -219,12 +221,18 @@ class VoteView(View):
         else:
             vote.save()
             self._update_session(request, post, vote)
-            return JsonResponse({"vote": {"id": vote.id,}})
+            return JsonResponse(
+                {
+                    "vote": {
+                        "id": vote.id,
+                    }
+                }
+            )
 
     def _update_session(self, request, post, vote):
         votes = request.session.setdefault("votes", dict())
         if post.id not in votes:
             votes[post.id] = vote.is_bad
-        request.session['votes'] = votes
+        request.session["votes"] = votes
         request.session.modified = True
         logger.debug("Session: %s", request.session)

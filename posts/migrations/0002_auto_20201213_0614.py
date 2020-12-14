@@ -6,23 +6,23 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('posts', '0001_initial'),
+        ("posts", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='post',
-            name='client',
+            model_name="post",
+            name="client",
         ),
         migrations.RemoveField(
-            model_name='suggestion',
-            name='client',
+            model_name="suggestion",
+            name="client",
         ),
         migrations.RemoveField(
-            model_name='vote',
-            name='client',
+            model_name="vote",
+            name="client",
         ),
         migrations.DeleteModel(
-            name='Client',
+            name="Client",
         ),
     ]
