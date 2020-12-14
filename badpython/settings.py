@@ -123,15 +123,12 @@ logconfig.dictConfig(
             },
         },
         "root": {
-            "handlers": ["console"],
+            "handlers": ['console', ],
             "level": "WARNING",
         },
         "loggers": {
             "posts": {
                 "level": LOGLEVEL,
-                "handlers": [
-                    "console",
-                ],
             },
         },
     }

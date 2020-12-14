@@ -55,21 +55,24 @@ class Index(View):
         return render(request, "posts/index.html", context)
 
     def _session_context(self, request, post):
-        s = request.session
-        logger.debug("Session: %s", s.items())
-        sugg = s.get("suggestions", dict())
-        suggestion_id = sugg.get(str(post.id))
-        vote = s.get("votes", dict()).get(str(post.id))
-        subs = s.get("submission", list())
-        print(suggestion_id, vote, subs)
         context = {}
-        if suggestion_id:
-            context.update({"suggestion": suggestion_id})
-        if vote is not None:
-            context.update({"vote": vote})
-        if str(post.id) in subs:
-            context.update({"posted_by_user": True})
-        logger.debug("session context: %s", context)
+        try:
+            s = request.session
+            sugg = s.get("suggestions", dict())
+            suggestion_id = sugg.get(str(post.id))
+            vote = s.get("votes", dict()).get(str(post.id))
+            posts = s.get("posts", list())
+            # if the user has submitted a suggestion
+            if suggestion_id:
+                context.update({"suggestion": suggestion_id})
+            # if the user has voted
+            if vote is not None:
+                context.update({"vote": vote})
+            # if the post is by this user
+            context.update({"posted_by_user": post.id in posts})
+            logger.debug("Session context for post %s: %s", post.id, context)
+        except Exception as e:
+            logger.exception("Error trying to construct index context from session")
         return context
 
     def _update_seen(self, request, post):
@@ -110,11 +113,13 @@ index = Index.as_view()
 class SubmissionView(View):
     @method_decorator(limit)
     def get(self, request):
+        """The submission form."""
         context = {"submission": True}
         return render(request, "posts/submit.html", context)
 
     @method_decorator(limit)
     def post(self, request, **kwargs):
+        """Submit some code."""
         try:
             body = json.loads(request.body)
         except Exception as e:
@@ -137,11 +142,11 @@ class SubmissionView(View):
             return redirect("index")
 
     def _update_session(self, request, post):
+        """Record the submission in this user's session."""
         posts = request.session.setdefault("posts", list())
         posts.append(post.id)
         request.session["posts"] = posts
         request.session.modified = True
-        logger.debug("Session: %s", request.session)
 
 
 def parse_errors(code):
@@ -163,8 +168,15 @@ def parse_errors(code):
 class SuggestionView(View):
     @method_decorator(limit)
     def get(self, request, post_id, **kwargs):
-        post = get_object_or_404(Post, pk=post_id)
+        """The suggestion form."""
+        post = get_object_or_404(Post, pk=post_id) 
+        if self._already_suggested(request, post_id):
+            return redirect("index")
         post.code = post.code.strip()
+        context = {"post": post}
+        return render(request, "posts/suggest.html", context)
+    
+    def _already_suggested(self, request, post_id):
         existing = request.session.setdefault("suggestions", dict())
         logger.debug("Existing suggestions %s", existing)
         if str(post_id) in existing:
@@ -172,13 +184,15 @@ class SuggestionView(View):
             messages.warning(
                 request, "You have already submitted a suggestion for that"
             )
-            return redirect("index")
-        context = {"post": post}
-        return render(request, "posts/suggest.html", context)
+            return True
+        return False
 
     @method_decorator(limit)
     def post(self, request, post_id, **kwargs):
+        """Submit the suggestion."""
         post = get_object_or_404(Post, pk=post_id)
+        if self._already_suggested(request, post_id):
+            return redirect("index")
         try:
             body = json.loads(request.body)
         except:
@@ -200,7 +214,6 @@ class SuggestionView(View):
             suggestions[post.id] = suggestion.id
         request.session["suggestions"] = suggestions
         request.session.modified = True
-        logger.debug("Session: %s", request.session)
 
 
 class VoteView(View):
@@ -215,7 +228,14 @@ class VoteView(View):
         if is_bad is None or not isinstance(is_bad, bool):
             return HttpResponseBadRequest("isBad must be one of 'true' or 'false'")
         vote_field = VoteField.from_is_bad(is_bad)
-        vote = Vote.new(post_id=post.id, is_bad=vote_field)
+        existing_vote = self._existing_vote(request, post)
+        if existing_vote:
+            logger.info("Updating existing vote %s", existing_vote.id)
+            existing_vote.is_bad = vote_field
+            vote = existing_vote
+        else:
+            logger.info("Creating new vote %s", vote_field)
+            vote = Vote.new(post_id=post.id, is_bad=vote_field)
         if vote is None:
             return HttpResponse(status=500)
         else:
@@ -228,11 +248,32 @@ class VoteView(View):
                     }
                 }
             )
+    
+    def _existing_vote(self, request, post):
+        try:
+            votes = request.session.setdefault("votes", dict())
+            logger.debug("session votes: %s", votes)
+            vote = votes.get(str(post.id), {})
+            logger.debug("session vote for %s: %s", post.id, vote)
+            vote_id = vote.get("id")
+            logger.debug("vote id: %s", vote_id)
+            if vote_id:
+                try:
+                    vote = Vote.objects.get(pk=vote_id)
+                except Exception as e:
+                    logger.exception("Could not get existing vote for id %s", vote_id)
+                    return None
+                return vote
+            return None
+        except Exception as e:
+            logger.exception("Failed trying to look up existing vote")
+        return None
 
     def _update_session(self, request, post, vote):
         votes = request.session.setdefault("votes", dict())
-        if post.id not in votes:
-            votes[post.id] = vote.is_bad
+        votes[post.id] = {
+            "id": vote.id,
+            "is_bad": vote.is_bad
+        }
         request.session["votes"] = votes
         request.session.modified = True
-        logger.debug("Session: %s", request.session)
