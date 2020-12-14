@@ -1,4 +1,6 @@
 {% extends "posts/_layout.html" %}
+{% load tags %}
+
 {% block content %}
 <div class="row d-flex justify-content-center">
     <h3>{{ post.title }}</h3>
@@ -13,12 +15,22 @@
 {{ post.code }}
         </code>
     </pre>
-    <div class="row" style="margin: auto;" class="mx-auto">
+    <div class="row d-flex justify-content-between" style="margin: auto;" class="mx-auto">
         <button id="bad-btn" class="btn btn-success">
             <i class="far fa-thumbs-up"></i>
             This <em>is</em> bad python!
         </button>
-        <button id="not-bad-btn" class="btn btn-danger ml-auto">
+        <div class="">
+            {% exists 'vote' as has_vote %}
+            {% if has_vote %}
+                {% if vote == True %}
+                    <p>You voted <i class="far fa-thumbs-up"></i></p>
+                {% else %}
+                    <p>You voted <i class="far fa-ban"></i></p>
+                {% endif %}
+            {% endif %}
+        </div>
+        <button id="not-bad-btn" class="btn btn-danger">
             <i class="far fa-ban"></i>
             This isn't that bad!
         </button>

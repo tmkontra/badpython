@@ -20,15 +20,15 @@ from .exceptions import DuplicateError
 from .models import *
 from django.core.cache.backends import locmem
 
-logger = logging.getLogger("posts.views")
 
+logger = logging.getLogger("posts.views")
 
 def ratelimited(request, *args, **kwargs):
     logger.info("Rate limit reached for request", request.META['CLIENT_IP'])
     return HttpResponse(status=429, content="Too many requests, please slow down!")
 
-
 GLOBAL_REQUEST_GROUP = "global"
+
 limit = ratelimit(
     key="header:client-ip",
     method="GET",
@@ -48,7 +48,34 @@ class Index(View):
             messages.error(request, "No more posts to view, submit your own!")
             return redirect("submit")
         context = {"post": post}
+        context.update(self._session_context(request, post))
+        self._update_seen(request, post)
         return render(request, "posts/index.html", context)
+
+    def _session_context(self, request, post):
+        s = request.session
+        logger.debug("Session: %s", s.items())
+        sugg = s.get("suggestions", dict())
+        suggestion_id = sugg.get(str(post.id))
+        vote = s.get("votes", dict()).get(str(post.id))
+        subs = s.get("submission", list())
+        print(suggestion_id, vote, subs)
+        context = {}
+        if suggestion_id:
+            context.update({"suggestion": suggestion_id})
+        if vote is not None:
+            context.update({"vote": vote})
+        if str(post.id) in subs:
+            context.update({"posted_by_user": True})
+        logger.debug("session context: %s", context)
+        return context
+
+    def _update_seen(self, request, post):
+        seen = request.session.setdefault('posts_seen', list())
+        if post.id not in seen:
+            seen.append(post.id)
+        request.session['posts_seen'] = seen
+        request.session.modified = True
 
     @classmethod
     def _random_post(cls, previous_id=None):
@@ -98,17 +125,21 @@ class SubmissionView(View):
         err, msg = parse_errors(code)
         if err:
             return JsonResponse({"message": msg, "errors": err})
-        ip_addr = request.META.get("CLIENT_IP")
-        if ip_addr is None:
-            messages.warning(request, "Unable to submit at this time.")
-            return redirect("index")
-        post = Post.new(title, code, ip_addr)
+        post = Post.new(title, code)
         if post is None:
             return HttpResponseBadRequest("Unable to save your submission!")
         else:
             post.save()
+            self._update_session(request, post)
             messages.success(request, "Submitted successfully!")
             return redirect("index")
+
+    def _update_session(self, request, post):
+        posts = request.session.setdefault('posts', list())
+        posts.append(post.id)
+        request.session['posts'] = posts
+        request.session.modified = True
+        logger.debug("Session: %s", request.session)
 
 
 def parse_errors(code):
@@ -132,12 +163,10 @@ class SuggestionView(View):
     def get(self, request, post_id, **kwargs):
         post = get_object_or_404(Post, pk=post_id)
         post.code = post.code.strip()
-        ip_addr = request.META.get("CLIENT_IP")
-        if ip_addr is None:
-            messages.warning(request, "Unable to submit a suggestion at this time.")
-            return redirect("index")
-        client = Client.get_or_create(ip_addr)
-        if Suggestion.already_suggested(client.id, post_id):
+        existing = request.session.setdefault("suggestions", dict())
+        logger.debug("Existing suggestions %s", existing)
+        if str(post_id) in existing:
+            logger.info("Session cannot submit another suggestion")
             messages.warning(
                 request, "You have already submitted a suggestion for that"
             )
@@ -158,22 +187,24 @@ class SuggestionView(View):
         err, msg = parse_errors(code)
         if err:
             return JsonResponse({"message": msg, "errors": err})
-        ip_addr = request.META.get("CLIENT_IP")
-        if ip_addr is None:
-            return HttpResponseForbidden("must provide ip address to vote")
-        try:
-            suggestion = Suggestion.new(post.id, code, summary, ip_addr)
-        except DuplicateError as e:
-            messages.warning("You have already submitted a suggestion for that.")
-            return redirect("index")
-        else:
-            suggestion.save()
-            return redirect("index")
+        suggestion = Suggestion.new(post.id, code, summary)
+        suggestion.save()
+        self._update_session(request, post, suggestion)
+        return redirect("index")
+    
+    def _update_session(self, request, post, suggestion):
+        suggestions = request.session.setdefault('suggestions', dict())
+        if post.id not in suggestions:
+            suggestions[post.id] = suggestion.id
+        request.session['suggestions'] = suggestions
+        request.session.modified = True
+        logger.debug("Session: %s", request.session)
 
 
 class VoteView(View):
     @method_decorator(limit)
     def post(self, request, post_id, **kwargs):
+        post = get_object_or_404(Post, pk=post_id)
         try:
             body = json.loads(request.body)
         except:
@@ -181,14 +212,19 @@ class VoteView(View):
         is_bad = body.get("isBad")
         if is_bad is None or not isinstance(is_bad, bool):
             return HttpResponseBadRequest("isBad must be one of 'true' or 'false'")
-        ip_addr = request.META.get("CLIENT_IP")
-        if ip_addr is None:
-            return HttpResponseForbidden("must provide ip address to vote")
         vote_field = VoteField.from_is_bad(is_bad)
-        try:
-            vote = Vote.new(ip_addr=ip_addr, post_id=post_id, is_bad=vote_field)
-        except DuplicateError:
-            return HttpResponse(status=202)
+        vote = Vote.new(post_id=post.id, is_bad=vote_field)
+        if vote is None:
+            return HttpResponse(status=500)
         else:
             vote.save()
-            return JsonResponse({"vote": {"id": vote.id}})
+            self._update_session(request, post, vote)
+            return JsonResponse({"vote": {"id": vote.id,}})
+
+    def _update_session(self, request, post, vote):
+        votes = request.session.setdefault("votes", dict())
+        if post.id not in votes:
+            votes[post.id] = vote.is_bad
+        request.session['votes'] = votes
+        request.session.modified = True
+        logger.debug("Session: %s", request.session)

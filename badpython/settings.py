@@ -61,14 +61,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "posts.middleware.get_client_ip",
+    "posts.middleware.set_client_ip",
     "ratelimit.middleware.RatelimitMiddleware",
 ]
 
-
-SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
 
 RATELIMIT_ENABLE = True
 RATELIMIT_VIEW = "posts.views.ratelimited"
@@ -124,8 +121,12 @@ logconfig.dictConfig({
             'formatter': 'console',
         },
     },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
     'loggers': {
-        '': {
+        'posts': {
             'level': LOGLEVEL,
             'handlers': ['console', ],
         },
