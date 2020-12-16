@@ -1,0 +1,81 @@
+posts:
+    Iterating using index: |
+        items = ["hello", "world", "third"]
+        for i in range(len(items)):
+            current = items[i]
+            print(current)
+    Not using defaultdict: |
+        d = {}
+        datas = [1, 2, 3, 4, 2, 3, 4, 1, 5]
+        for k in datas:
+            if k not in d:
+                d[k] = 0 
+            d[k] += 1
+    Not checking exception type: | 
+        try:
+            my_dangerous_code()
+        except:
+            print("Caught literally any exception imaginable!")
+    Default argument: |
+        def my_function(keyword_arg=[]):
+            """keyword_arg is a mutable list that persists 
+               across invocations of my_function().
+            """
+            keyword_arg.append(1)
+            return keyword_arg
+        
+        assert(my_function() == [1])
+        assert(my_function() == [1]) # False: [1, 1] != [1]
+    Using globals: |
+        my_var = 100
+        def simple_func(x=None):
+            global my_var
+            if x is None:
+                my_var += 1
+    Using custom getters and setters: |
+        # This isn't java!
+        class MyClass():
+            def __init__(self, x):
+                self.x = x
+            
+            def setX(self, x):
+                self.x = x
+
+            def getX(self, x):
+                return self.x
+    Overly explicit empty-checks: |
+        def list_check(ls: List[int]):
+            if ls == []:
+                return None
+            else:
+                do_action_with_list(ls)
+    Obfuscated code: |
+        def myf(var_rfnd=None):
+            """What does this code do?"""
+            if var_rfnd:
+                return upd_if_cstm_stg_set_ok(var_rfnd)
+            else:
+                return cptr_rcsrv_smpl_msg()
+    Class that can just be a module: |
+        class MyOperations():
+            @staticmethod
+            def combine(x, y):
+                pass
+            
+            @staticmethod
+            def swap(x, y):
+                pass
+            
+            @classmethod
+            def my_op(cls, value):
+                return value + 1
+    Mutable iteration: |
+        my_squares = []
+        for i in input_list:
+            my_squares.append(i * i)
+    Mutable dict construction: |
+        my_mapping = {}
+        for k, v in pairs:
+            my_mapping[k] = v
+    Abusing lambda: |
+        my_operation = lambda x, y, c, d: update(c) + lookup(x) + (halve(y) + double(d))
