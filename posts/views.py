@@ -215,14 +215,40 @@ class SuggestionView(View):
         request.session["suggestions"] = suggestions
         request.session.modified = True
 
-class PostSuggestionsListView(View):
+class PostSuggestionView(View):
     def get(self, request, post_id):
-        """View list of suggestions for a post."""
+        """View suggestions."""
         post = get_object_or_404(Post, pk=post_id)
-        suggestions = Suggestion.objects.filter(post__id=post.id)
+        suggestion_id = request.GET.get("s")
+        if suggestion_id:
+            suggestion = Suggestion.objects.filter(post__id=post_id, pk=suggestion_id).first()
+            if not suggestion:
+                return HttpResponseNotFound()
+            next_suggestion = Suggestion.objects.filter(post__id=post_id, id__gt=suggestion_id).order_by('id').first()
+        else:
+            suggestions = Suggestion.objects.filter(post__id=post_id).order_by('id').iterator()
+            try:
+                suggestion = next(suggestions)
+            except:
+                suggestion = None
+            if suggestion:
+                try:
+                    next_suggestion = next(suggestions)
+                except:
+                    next_suggestion = None
+            else:
+                next_suggestion = None
+        if not next_suggestion:
+            next_suggestion = Suggestion.objects.filter(post__id=post_id).order_by('id').first()
+        if suggestion:
+            no_suggestions = False
+        else:
+            no_suggestions = True
         context = {
             "post": post,
-            "suggestions": suggestions
+            "suggestion": suggestion,
+            "next_suggestion": next_suggestion,
+            "no_suggestions": no_suggestions,
         }
         return render(request, "posts/suggestions.html", context)
 

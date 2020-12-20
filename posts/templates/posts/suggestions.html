@@ -5,31 +5,34 @@
 {% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-between">
-    <div class="col-12" id="suggestion-list">
-        <h4 style="display: inline;">Suggestions for <span style="font-weight: lighter;">"{{ post.title }}"</span></h4>
-        <div class="mt-5 container">
-        {% if suggestions %}
-        <ul class="list-group col-6" style="line-height: 2rem; font-size: larger;">
-        {% for suggestion in suggestions %}
-            <a href='{% url "suggestion_detail" post_id=post.id suggestion_id=suggestion.id %}' class="list-group-item list-group-item-action">
-                <i class="far fa-angle-right"></i>
-                {{ suggestion.description }}
-            </a>
-        {% endfor %}
-        </ul>
-        {% else %}
-            <div class="row">
-                <h4>No suggestions yet!</h4>
-            </div>
-            <div class="row">
-                <h5>
-                    <a href="/">return to home</a>
-                </h5>
-            </div>
-        {% endif %}
-        </div>
+<div class="container">
+    <div class="d-flex">
+        <h4 style="display: inline;">Suggestion for <span style="font-weight: lighter;">"{{ post.title }}"</span></h4>
     </div>
+    {% if no_suggestions %}
+    <div class="d-flex mt-5">
+        <h4>No suggestions yet!</h4>
+    </div>
+    <div class="">
+        <a href="/">return to home</a>
+    </div>
+    {% else %}
+    <div class="d-flex justify-content-center">
+        <h5>{{ suggestion.description }}</h5>
+    </div>
+    <div class="container" style="max-width: 80%; position: relative; padding: 0px;">
+        <pre style="margin-bottom: 0.1rem;">
+            <code id="code" class="python px-5" style="line-height: 1.5rem; min-height: 10%; max-height: 50%; overflow-y: scroll;">
+{{ suggestion.code }}
+            </code>
+        </pre>
+    </div>
+    <div class="d-flex justify-content-center">
+        <a href="{% url 'suggestions' post_id=post.id %}?s={{ next_suggestion.id }}">
+            Next Suggestion: <span style="font-weight: bold;">{{ next_suggestion.description }}</span>
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 

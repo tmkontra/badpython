@@ -9,10 +9,6 @@
     {% endif %}
 </div>
 <div id="code-container" class="container" style="max-width: 80%; position: relative; padding: 0px;">
-    <!-- <button class='btn btn-outline-dark' id="suggestion" style="color: darkgray; border-color: dar;">
-        <i class="far fa-lightbulb"></i>
-        suggest...
-    </button> -->
     <pre style="margin-bottom: 0.1rem;">
         <code id="code" class="python px-5" style="line-height: 1.5rem; min-height: 10%; max-height: 50%; overflow-y: scroll;">
 {{ post.code }}
@@ -71,7 +67,7 @@
 </div>
 
 <div id="modal-body-negative" style="display: none;">
-    <a href="{% url 'suggestions_list' post_id=post.id %}" class="btn btn-outline-dark">
+    <a href="{% url 'suggestions' post_id=post.id %}" class="btn btn-outline-dark">
         <i class="far fa-lightbulb"></i>
         See Others' Suggestions For Improvement
         </button>
