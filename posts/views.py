@@ -215,6 +215,28 @@ class SuggestionView(View):
         request.session["suggestions"] = suggestions
         request.session.modified = True
 
+class PostSuggestionsListView(View):
+    def get(self, request, post_id):
+        """View list of suggestions for a post."""
+        post = get_object_or_404(Post, pk=post_id)
+        suggestions = Suggestion.objects.filter(post__id=post.id)
+        context = {
+            "post": post,
+            "suggestions": suggestions
+        }
+        return render(request, "posts/suggestions.html", context)
+
+class PostSuggestionDetailView(View):
+    def get(self, request, post_id, suggestion_id):
+        """View a specific suggestion."""
+        post = get_object_or_404(Post, pk=post_id)
+        suggestion = get_object_or_404(Suggestion, pk=suggestion_id)
+        context = {
+            "post": post,
+            "suggestions": suggestion
+        }
+        return render(request, "posts/suggestion_detail.html", context)
+
 
 class VoteView(View):
     @method_decorator(limit)

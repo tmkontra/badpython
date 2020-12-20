@@ -59,7 +59,7 @@
     </div>
 </div>
 
-<div id="modal-body-success" style="display: none;">
+<div id="modal-body-positive" style="display: none;">
     <a href="{% url 'suggest' post_id=post.id %}" class="btn btn-outline-dark">
         <i class="far fa-lightbulb"></i>
         Share How You'd Fix It
@@ -70,7 +70,11 @@
     </a>
 </div>
 
-<div id="modal-body-failed" style="display: none;">
+<div id="modal-body-negative" style="display: none;">
+    <a href="{% url 'suggestions_list' post_id=post.id %}" class="btn btn-outline-dark">
+        <i class="far fa-lightbulb"></i>
+        See Others' Suggestions For Improvement
+        </button>
     <a href="{% url 'index' %}?p={{post.id}}" class="btn btn-primary">
         <i class="fa fa-forward"></i>
         See Another
@@ -112,14 +116,14 @@
     let body = $("#vote-modal-body");
 
     let vote_success = function () {
-        let s = $("#modal-body-success");
+        let s = $("#modal-body-positive");
         let h = s.html();
         body.html(h);
         modal.modal("show");
     };
 
     let vote_failed = function () {
-        let h = $("#modal-body-failed").html();
+        let h = $("#modal-body-negative").html();
         body.html(h);
         modal.modal("show");
     };

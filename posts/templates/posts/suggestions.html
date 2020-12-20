@@ -1,0 +1,36 @@
+{% extends "posts/_layout.html" %}
+{% load static %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-between">
+    <div class="col-12" id="suggestion-list">
+        <h4 style="display: inline;">Suggestions for <span style="font-weight: lighter;">"{{ post.title }}"</span></h4>
+        <div class="mt-5 container">
+        {% if suggestions %}
+        <ul class="list-group col-6" style="line-height: 2rem; font-size: larger;">
+        {% for suggestion in suggestions %}
+            <a href='{% url "suggestion_detail" post_id=post.id suggestion_id=suggestion.id %}' class="list-group-item list-group-item-action">
+                <i class="far fa-angle-right"></i>
+                {{ suggestion.description }}
+            </a>
+        {% endfor %}
+        </ul>
+        {% else %}
+            <div class="row">
+                <h4>No suggestions yet!</h4>
+            </div>
+            <div class="row">
+                <h5>
+                    <a href="/">return to home</a>
+                </h5>
+            </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

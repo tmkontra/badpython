@@ -1,0 +1,17 @@
+{% extends "posts/_layout.html" %}
+{% load static %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-between">
+    <div class="col-12" id="suggestion-list">
+        <h3>Suggestion for: {{ post.title }}</h3>
+        <h4>{{  suggestion.description }}</h4>
+        {{ suggestion.code }}
+    </div>
+</div>
+
+
+{% endblock %}
