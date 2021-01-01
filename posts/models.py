@@ -1,3 +1,4 @@
+from collections import defaultdict
 import datetime
 import socket
 from django.db import models
@@ -21,6 +22,24 @@ class Post(PublishableMixin, models.Model):
     @classmethod
     def new(cls, title, code):
         return Post(title=title, code=code, note=None)
+
+    def get_current_vote_counts(self):
+        _id = self.id        
+        vote_counts = (
+            Vote
+                .objects
+                .filter(post__id=_id)
+                .all()
+                .values('post_id', 'is_bad')
+                .annotate(count=models.Count('id'))
+        )
+        result = defaultdict(int)
+        for count in vote_counts:
+            if count['is_bad']:
+                result['is_bad'] = count['count']
+            else:
+                result['not_bad'] = count['count']
+        return result
 
 
 class VoteField(models.BooleanField):

@@ -71,10 +71,10 @@
         <i class="far fa-lightbulb"></i>
         See Others' Suggestions For Improvement
         </button>
-    <a href="{% url 'index' %}?p={{post.id}}" class="btn btn-primary">
-        <i class="fa fa-forward"></i>
-        See Another
-    </a>
+        <a href="{% url 'index' %}?p={{post.id}}" class="btn btn-primary">
+            <i class="fa fa-forward"></i>
+            See Another
+        </a>
 </div>
 
 <div class="modal" role="dialog" id="after-vote-modal">
@@ -87,7 +87,22 @@
                 </button>
             </div>
             <div class="modal-body d-flex justify-content-around" id="vote-modal-body">
-        
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="container">
+                            <div class="row justify-content-center">
+                                <h5>Current Vote Counts</h5>
+                            </div>
+                            <div class="row justify-content-around" id="vote-counts-div">
+                                <p>Is Bad: <span id="is-bad-count"></span></p>
+                                <p>Not Bad: <span id="not-bad-count"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row justify-content-between" id="modal-buttons-container">
+                        
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -109,7 +124,7 @@
     let modal = $("#after-vote-modal");
     let modalTitle = $("#vote-modal-title");
 
-    let body = $("#vote-modal-body");
+    let body = $("#modal-buttons-container");
 
     let vote_success = function () {
         let s = $("#modal-body-positive");
@@ -151,7 +166,15 @@
                 body: JSON.stringify({
                     isBad: is_bad,
                 })
-            }).then(handler)
+            }).then(resp => resp.json())
+                .then(json => {
+                    let counts = json.currentVoteCounts;
+                    let bad = counts.bad;
+                    let notBad = counts.notBad;
+                    $("#is-bad-count").text(bad);
+                    $("#not-bad-count").text(notBad);
+                })
+                .then(handler)
         };
         return vote;
     };

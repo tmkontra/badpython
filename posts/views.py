@@ -289,10 +289,16 @@ class VoteView(View):
         else:
             vote.save()
             self._update_session(request, post, vote)
+            counts = post.get_current_vote_counts()
+            print(counts)
             return JsonResponse(
                 {
                     "vote": {
                         "id": vote.id,
+                    },
+                    "currentVoteCounts": {
+                        "bad": counts['is_bad'],
+                        "notBad": counts['not_bad'],
                     }
                 }
             )
