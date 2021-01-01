@@ -91,18 +91,25 @@ class Index(View):
                 post = post_search[0]
         where = ""
         if post is not None:
-            where = f"WHERE id != {post.id}"
+            where = f"AND p.id != {post.id}"
             logger.debug("filtering previous post: %s", where)
         try:
             sql = f"""
                 SELECT * 
-                FROM posts_post
+                FROM posts_post p
+                LEFT JOIN posts_postapproval a ON p.id = a.post_id
+                WHERE a.approved_at IS NOT NULL
                 {where}
                 LIMIT 1 
-                OFFSET floor(random() * (select count(*) from posts_post {where}));
+                OFFSET floor(random() * (SELECT count(*)
+                    FROM posts_post p
+                    LEFT JOIN posts_postapproval a ON p.id = a.post_id
+                    WHERE a.approved_at IS NOT NULL
+                    {where}
+                ));
                 """
             return Post.objects.raw(sql)[0]
-        except Exception as e:
+        except IndexError as e:
             logger.exception("could not get random post")
             return None
 
@@ -133,12 +140,14 @@ class SubmissionView(View):
         if err:
             return JsonResponse({"message": msg, "errors": err})
         post = Post.new(title, code)
+        unapproved = PostApproval(post=post)
         if post is None:
             return HttpResponseBadRequest("Unable to save your submission!")
         else:
             post.save()
+            unapproved.save()
             self._update_session(request, post)
-            messages.success(request, "Submitted successfully!")
+            messages.success(request, "Submitted successfully! A moderator will approve your post shortly.")
             return redirect("index")
 
     def _update_session(self, request, post):
@@ -204,7 +213,9 @@ class SuggestionView(View):
         if err:
             return JsonResponse({"message": msg, "errors": err})
         suggestion = Suggestion.new(post.id, code, summary)
+        unapproved_suggestion = SuggestionApproval(suggestion=suggestion)
         suggestion.save()
+        unapproved_suggestion.save()
         self._update_session(request, post, suggestion)
         return redirect("index")
 

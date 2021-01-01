@@ -16,6 +16,7 @@ psycopg2 = "*"
 autopep8 = "*"
 gunicorn = {extras = ["gevent"], version = "*"}
 "ruamel.yaml" = "*"
+profanity-filter = "*"
 
 [requires]
 python_version = "3.8"

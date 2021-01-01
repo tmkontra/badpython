@@ -42,6 +42,10 @@ class Post(PublishableMixin, models.Model):
         return result
 
 
+class PostApproval(models.Model):
+    post = models.ForeignKey(Post, null=False, on_delete=models.PROTECT)
+    approved_at = models.DateTimeField(null=True)
+
 class VoteField(models.BooleanField):
     description = "A Vote, good or bad code."
 
@@ -84,3 +88,8 @@ class Suggestion(PublishableMixin, models.Model):
         if post is None:
             return None
         return Suggestion(post=post, code=code, description=summary)
+
+class SuggestionApproval(models.Model):
+    suggestion = models.ForeignKey(Suggestion, null=False, on_delete=models.PROTECT)
+    approved_at = models.DateTimeField(null=True)
+    
