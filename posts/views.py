@@ -231,13 +231,25 @@ class PostSuggestionView(View):
         """View suggestions."""
         post = get_object_or_404(Post, pk=post_id)
         suggestion_id = request.GET.get("s")
+        approved_suggestions = SuggestionApproval.objects.exclude(
+            approved_at=None).values('suggestion_id')
+        print("approved suggs: %s" % approved_suggestions)
+        query = Suggestion.objects.filter(pk__in=approved_suggestions.all())
         if suggestion_id:
-            suggestion = Suggestion.objects.filter(post__id=post_id, pk=suggestion_id).first()
+            suggestion = (query
+                .filter(post__id=post_id, pk=suggestion_id)
+                .first()
+            )
             if not suggestion:
                 return HttpResponseNotFound()
             next_suggestion = Suggestion.objects.filter(post__id=post_id, id__gt=suggestion_id).order_by('id').first()
         else:
-            suggestions = Suggestion.objects.filter(post__id=post_id).order_by('id').iterator()
+            suggestions = (
+                query
+                    .filter(post__id=post_id)
+                    .order_by('id')
+                    .iterator()
+            )
             try:
                 suggestion = next(suggestions)
             except:
