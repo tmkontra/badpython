@@ -233,7 +233,6 @@ class PostSuggestionView(View):
         suggestion_id = request.GET.get("s")
         approved_suggestions = SuggestionApproval.objects.exclude(
             approved_at=None).values('suggestion_id')
-        print("approved suggs: %s" % approved_suggestions)
         query = Suggestion.objects.filter(pk__in=approved_suggestions.all())
         if suggestion_id:
             suggestion = (query
@@ -242,7 +241,7 @@ class PostSuggestionView(View):
             )
             if not suggestion:
                 return HttpResponseNotFound()
-            next_suggestion = Suggestion.objects.filter(post__id=post_id, id__gt=suggestion_id).order_by('id').first()
+            next_suggestion = query.filter(post__id=post_id, id__gt=suggestion_id).order_by('id').first()
         else:
             suggestions = (
                 query
@@ -262,7 +261,7 @@ class PostSuggestionView(View):
             else:
                 next_suggestion = None
         if not next_suggestion:
-            next_suggestion = Suggestion.objects.filter(post__id=post_id).order_by('id').first()
+            next_suggestion = query.filter(post__id=post_id).order_by('id').first()
         if suggestion:
             no_suggestions = False
         else:
