@@ -12,7 +12,7 @@ django = "*"
 django-bootstrap4 = "*"
 django-ratelimit = "*"
 python-dotenv = "*"
-psycopg2 = "*"
+psycopg2-binary = "*"
 autopep8 = "*"
 gunicorn = {extras = ["gevent"], version = "*"}
 "ruamel.yaml" = "*"
